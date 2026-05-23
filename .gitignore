@@ -1,1 +1,28 @@
-# Logslogs*.lognpm-debug.log*yarn-debug.log*yarn-error.log*pnpm-debug.log*lerna-debug.log*node_modulesdistdist-ssr*.local# Editor directories and files.vscode/*!.vscode/extensions.json.idea.DS_Store*.suo*.ntvs**.njsproj*.sln*.sw?PLAN.mdcoverage/GEMINI.mdREVIEW_REPORT.mdUSAGE_REPORT.md
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+node_modules/
+dist/
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs
+**.njsproj
+*.sln
+*.sw?
+PLAN.md
+coverage/
+GEMINI.md
+REVIEW_REPORT.md
+USAGE_REPORT.md
