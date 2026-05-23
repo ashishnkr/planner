@@ -52,7 +52,7 @@ export const CalendarWidget = () => {
               <Droppable id={`day-drop-${dateKey}`} data={{ type: 'day', date: dateKey }} className='w-full h-full'>
                 <Draggable id={`day-drag-${dateKey}`} data={{ type: 'day', date: dateKey }} className='w-full h-full'>
                   <button
-                    onPointerDown={() => {
+                    onDoubleClick={() => {
                       setSelectedDate(day);
                       setNewReminderDate(dateKey);
                     }}

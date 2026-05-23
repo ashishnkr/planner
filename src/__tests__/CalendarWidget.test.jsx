@@ -13,11 +13,11 @@ describe('CalendarWidget', () => {
     expect(screen.getByText('23')).toBeInTheDocument();
   });
 
-  it('updates selected date on clicking a day', () => {
+  it('updates selected date on double clicking a day', () => {
     usePlannerStore.setState({ selectedDate: new Date('2024-05-23') });
     render(<CalendarWidget />);
     const day10 = screen.getByText('10');
-    fireEvent.pointerDown(day10);
+    fireEvent.doubleClick(day10);
     expect(usePlannerStore.getState().selectedDate.getDate()).toBe(10);
   });
 

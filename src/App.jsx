@@ -2,19 +2,20 @@ import React, { useEffect } from 'react';
 import { CalendarWidget } from './components/CalendarWidget';
 import { NotesWidget } from './components/NotesWidget';
 import { RemindersWidget } from './components/RemindersWidget';
+import { AttachmentWidget } from './components/AttachmentWidget';
 import { TitleBar } from './components/TitleBar';
 import { usePlannerStore } from './store';
 import { format } from 'date-fns';
 import { DndContext, pointerWithin } from '@dnd-kit/core';
 
 function App() {
-  const { 
-    reminders, 
-    appendNote, 
-    updateReminder, 
-    setSelectedDate, 
+  const {
+    reminders,
+    appendNote,
+    updateReminder,
+    setSelectedDate,
     selectedDate,
-    setNewReminderDate 
+    setNewReminderDate
   } = usePlannerStore();
 
   const handleDragEnd = (event) => {
@@ -27,13 +28,21 @@ function App() {
 
     // Logic: Drag Date to Notes
     if (activeData.type === 'day' && overData.type === 'notes') {
-      appendNote(dateKey, `[[${activeData.date}]]`);
+      appendNote(dateKey, '[[ ' + activeData.date + ' ]]');
     }
 
     // Logic: Drag Reminder to Notes
     if (activeData.type === 'reminder' && overData.type === 'notes') {
       const r = activeData.reminder;
-      appendNote(dateKey, `- ${r.title} (${r.time})`);
+      appendNote(dateKey, '[Reminder: ' + r.title + ' @ ' + r.time + ']');
+    }
+
+    // Logic: Drag Attachment to Notes
+    if (activeData.type === 'attachment' && overData.type === 'notes') {
+      const a = activeData.attachment;
+      const { linkAttachmentToDate } = usePlannerStore.getState();
+      appendNote(dateKey, '[Attachment: ' + a.name + ']');
+      linkAttachmentToDate(a.id, dateKey);
     }
 
     // Logic: Drag Reminder to Calendar Date
@@ -48,6 +57,14 @@ function App() {
   };
 
   useEffect(() => {
+    if (window.Notification) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     const checkNotifications = () => {
       const now = new Date();
       const currentTime = format(now, 'HH:mm');
@@ -59,8 +76,10 @@ function App() {
 
       dueReminders.forEach((reminder) => {
         if (window.Notification && Notification.permission !== 'denied') {
+          console.log('Triggering notification for:', reminder.title);
           new Notification('Reminders', {
-            body: `${reminder.title}${reminder.location ? ' @ ' + reminder.location : ''}`,
+            body: reminder.title + (reminder.location ? ' @ ' + reminder.location : ''),
+            silent: false,
           });
         }
       });
@@ -68,7 +87,6 @@ function App() {
 
     checkNotifications();
     const interval = setInterval(checkNotifications, 60000);
-
     return () => clearInterval(interval);
   }, [reminders]);
 
@@ -82,7 +100,7 @@ function App() {
               <h1 className='text-3xl font-extrabold text-gray-900'>My Personal Planner</h1>
               <p className='text-gray-600'>Stay organized and interconnected.</p>
             </header>
-            
+
             <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
               <div className='lg:col-span-1 space-y-8'>
                 <CalendarWidget />
@@ -97,14 +115,18 @@ function App() {
                   </div>
                 </div>
               </div>
-              
+
               <div className='lg:col-span-1 h-[600px]'>
                 <NotesWidget />
               </div>
-              
+
               <div className='lg:col-span-1 h-[600px]'>
                 <RemindersWidget />
               </div>
+            </div>
+
+            <div className='mt-8 h-[400px]'>
+              <AttachmentWidget />
             </div>
           </div>
         </div>

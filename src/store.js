@@ -26,4 +26,21 @@ export const usePlannerStore = create((set) => ({
   removeReminder: (id) => set((state) => ({
     reminders: state.reminders.filter(r => r.id !== id)
   })),
+  
+  // Attachments: [{ id, name, path, type, size, dates: [], notes: [] }]
+  attachments: [],
+  addAttachment: (attachment) => set((state) => ({
+    attachments: [...state.attachments, { ...attachment, id: Date.now(), dates: attachment.dates || [], notes: attachment.notes || [] }]
+  })),
+  updateAttachment: (id, updates) => set((state) => ({
+    attachments: state.attachments.map(a => a.id === id ? { ...a, ...updates } : a)
+  })),
+  removeAttachment: (id) => set((state) => ({
+    attachments: state.attachments.filter(a => a.id !== id)
+  })),
+  linkAttachmentToDate: (id, date) => set((state) => ({
+    attachments: state.attachments.map(a => 
+      a.id === id ? { ...a, dates: Array.from(new Set([...a.dates, date])) } : a
+    )
+  })),
 }));
