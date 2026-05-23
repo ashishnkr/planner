@@ -1,28 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { usePlannerStore } from '../store';
 import { Draggable } from './DndWrappers';
-import { File, Paperclip, Trash2, Calendar, FileText } from 'lucide-react';
+import { File, Paperclip, Trash2, Calendar, FileText, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const AttachmentWidget = () => {
   const { attachments, addAttachment, removeAttachment, updateAttachment, selectedDate } = usePlannerStore();
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const fileInputRef = useRef(null);
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDraggingOver(false);
-    
-    const files = Array.from(e.dataTransfer.files);
-    console.log('Dropped files:', files);
-    
-    if (files.length === 0) {
-      console.log('No files found in dataTransfer');
-      return;
-    }
-
-    files.forEach(file => {
+  const processFiles = (files) => {
+    Array.from(files).forEach(file => {
       addAttachment({
         name: file.name,
         path: file.path || file.name,
@@ -32,6 +21,16 @@ export const AttachmentWidget = () => {
         notes: []
       });
     });
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFiles(e.dataTransfer.files);
+    }
   };
 
   const handleDragOver = (e) => {
@@ -49,7 +48,21 @@ export const AttachmentWidget = () => {
   const handleDragLeave = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDraggingOver(false);
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setIsDraggingOver(false);
+    }
+  };
+
+  const handleDoubleClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      processFiles(e.target.files);
+    }
   };
 
   const handleAddNote = (id) => {
@@ -62,28 +75,42 @@ export const AttachmentWidget = () => {
 
   return (
     <div 
-      className={`p-4 rounded-lg shadow-md h-full flex flex-col transition-all border-2 ${
+      className={`p-4 rounded-lg shadow-md h-full flex flex-col transition-all border-2 select-none ${
         isDraggingOver ? 'bg-blue-50 border-blue-400 scale-[1.01]' : 'bg-white border-transparent'
       }`}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
+      onDoubleClick={handleDoubleClick}
+      title="Double click to upload files"
     >
+      <input 
+        type="file" 
+        multiple 
+        className="hidden" 
+        ref={fileInputRef} 
+        onChange={handleFileChange}
+      />
+      
       <div className='flex items-center justify-between mb-4'>
         <h2 className='text-xl font-bold flex items-center gap-2'>
           <Paperclip size={24} className={isDraggingOver ? 'text-blue-500 animate-bounce' : 'text-green-500'} />
           Attachment Repository
         </h2>
-        <span className='text-xs text-gray-400'>Drop files to upload</span>
+        <div className='flex flex-col items-end'>
+          <span className='text-[10px] font-bold text-gray-400 uppercase'>Drop Zone</span>
+          <span className='text-[9px] text-gray-300 italic'>Double-click to browse</span>
+        </div>
       </div>
       
       <div className='flex-grow overflow-auto'>
         {attachments.length === 0 ? (
-          <div className={`h-32 border-2 border-dashed rounded-lg flex items-center justify-center italic transition-colors ${
+          <div className={`h-32 border-2 border-dashed rounded-lg flex flex-col items-center justify-center italic transition-colors ${
             isDraggingOver ? 'border-blue-400 text-blue-500' : 'border-gray-200 text-gray-400'
           }`}>
-            {isDraggingOver ? 'Release to upload' : 'No attachments yet. Drop files here.'}
+            <Upload size={32} className={`mb-2 ${isDraggingOver ? 'animate-bounce' : ''}`} />
+            <p>{isDraggingOver ? 'Release to upload' : 'Drop files here or double-click'}</p>
           </div>
         ) : (
           <table className='w-full text-left'>
@@ -97,7 +124,7 @@ export const AttachmentWidget = () => {
             </thead>
             <tbody className='divide-y divide-gray-100'>
               {attachments.map(a => (
-                <tr key={a.id} className='group hover:bg-gray-50 transition-colors'>
+                <tr key={a.id} className='group hover:bg-gray-50 transition-colors' onDoubleClick={(e) => e.stopPropagation()}>
                   <td className='py-4 px-2'>
                     <Draggable id={'attachment-drag-' + a.id} data={{ type: 'attachment', attachment: a }}>
                       <div className='flex items-center gap-3 cursor-move'>
